@@ -118,7 +118,7 @@ def view_task():
         log.error("tasks not show")
         raise HTTPException(status_code=500,detail="tasks not found")
 
-        
+@tool       
 def complete_task(index: int):
     """update the task complete"""
     try:
