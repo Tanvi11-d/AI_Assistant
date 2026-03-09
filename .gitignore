@@ -2,3 +2,5 @@
 _pycache_/
 venv/
 .vscode/
+notes.json/
+task.json/
