@@ -1,1 +1,1 @@
-["Buy groceries","buy toys"]
+[{"task": "Buy groceries", "status": "Pending"}, {"task": "Buy laptop", "status": "Pending"}]

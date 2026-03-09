@@ -8,7 +8,7 @@ app=FastAPI()
 def msg():
     return {"message":"fastapi is working..."}
 
-@app.post("/ask query/")
+@app.post("/ask_query/")
 def get_query(query:str):
     try:
         response=call_agent(query)
@@ -16,5 +16,5 @@ def get_query(query:str):
         return JSONResponse({"answer":answer})
     
     except Exception as e:
-        HTTPException(status_code=404,detail=str(e))
+        raise HTTPException(status_code=404,detail=str(e))
 
