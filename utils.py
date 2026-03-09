@@ -19,31 +19,33 @@ weather_api=os.getenv("weather_api")
 Notes="notes.json"
 task="task.json"
 
-# weather tool
+logger=logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+log=logging.getLogger(logger)
 
+
+# weather tool
 @tool
 def get_weathers(query:str):
-    """fatched current weather and temperature"""
+    """fatched current weather data"""
     try:
 
         url=f"https://api.openweathermap.org/data/2.5/weather?q={query}&appid={weather_api}&units=metric"
         response = requests.get(url)
         data = response.json()
-        temperature = data["main"]["temp"]
-        weather = data["weather"][0]["main"]
-        logging.info("weather fatched!!")
-        return {f"Current temperature is{temperature} and {weather}"}
+        log.info("weather fatched!!")
+        return data
     
     except:
-        logging.error("weather not fatched!!")
-        return "unable to fatched weather"
+        log.error("weather not fatched!!")
+        return "unable to fatched weather" 
 
 # Notes tool   
 @tool
 def save_note(query):
     """Save the all Notes"""    
     try:
-        if os.path.exists(Notes):
+        if os.path.exists(Notes) and os.path.getsize(Notes)>0 :
             with open(Notes,'r') as file:
                 notes=json.load(file)
         else:
@@ -51,10 +53,10 @@ def save_note(query):
         notes.append(query)
         with open(Notes,'w') as file:
             json.dump(notes,file)
-        logging.info("Notes add")
+        log.info("Notes add")
         return "Note saved"
     except:
-        logging.error("Notes not saved!!")
+        log.error("Notes not saved!!")
         return "Note Not Saved"
         
 
@@ -66,11 +68,11 @@ def get_notes():
             show_nots=json.load(file)
             if not show_nots:
                 return "Notes Not Found"
-        logging.info("Notes show")
+        log.info("Notes show")
         return "\n".join(show_nots)
     
     except:
-        logging.error("Notes Not show")
+        log.error("Notes Not show")
         raise HTTPException(status_code=500,detail="notes not found")
 
 # Tasks tool
@@ -78,7 +80,7 @@ def get_notes():
 def add_task(query):
     """add all task"""
     try:
-        if os.path.exists(task):
+        if os.path.exists(task) and os.path.getsize(task)>0:
             with open(task,'r') as file:
                 tasks=json.load(file)
         else:
@@ -86,11 +88,12 @@ def add_task(query):
         new_task={"task":query,"status":"Pending"}
         tasks.append(new_task)
         with open(task, 'w') as file:
+          
             json.dump(tasks,file)
-        logging.info("task add")
+        log.info("task add")
         return "Task added"
     except:
-        logging.error("Task Not added!!")
+        log.error("Task Not added!!")
         raise HTTPException(status_code=500,detail="tasks not added")
 
 
@@ -101,35 +104,37 @@ def view_task():
         with open(task,'r') as file:
             get_task=json.load(file)
         if not get_task:
-                return "Tasks Not Found"
+            return "Tasks Not Found"
         
         result=" "
         for i,t in enumerate(get_task,start=1):
-            result += f"{i}. {t['task']} ({t['status']})"
+            result += f"{i}. {t['task']} ({t['status']})\n"
+        
 
-        logging.info("Tasks show")
+        log.info("Tasks show")
         return result
     
     except:
-        logging.error("tasks not show")
+        log.error("tasks not show")
         raise HTTPException(status_code=500,detail="tasks not found")
 
-
-@tool
-def complete_task(index:int):
-    """complete or update tasks"""
-    try:
-        with open(task,'r') as file:
-            mark_task=json.load(file)
-        mark_task[index-1]['status']=='Completed'
-        with open(task,'w') as f:
-            json.dump(mark_task,f)
-        logging.info("Task updated")       
-        return "Task marked as completed."
-    except:
-        logging.error("task not complete")
-        raise HTTPException(status_code=500,detail="tasks not completed")
         
+def complete_task(index: int):
+    """update the task complete"""
+    try:
+        with open(task, "r") as f:
+            tasks_update = json.load(f)
+
+        tasks_update[index]["status"] = "Completed"
+      
+        with open(task, "w") as f:
+            json.dump(tasks_update, f)
+        log.info("task updated")
+        return "Task marked as completed."
+
+    except:
+        log.error("task not updated")
+        return "Invalid task index."
 
 
 # llm model
@@ -143,15 +148,17 @@ prompt=f"""
         - you are follow the below rules.
 
         Rules:
-        1. if user ask weather then you are call get_weathers tool and return current weather with temperature.
+        1. if user ask weather details then you are call get_weathers tool and return all current weather data.
         2. if user ask add notes,you are call save_note tool and saved all the data into json file,respond "Note saved".
         3. if you are showing notes then call get_notes and  Return only the all final answer with number format.
         4. if you are add task then called add_task tool,respond only "Task added".
         5. When the user asks to show tasks, call the view_task tool and return the tool output exactly as received with no extra text and format changes.
-        6. If the user asks to complete or update a task, identify the task number and call the complete_task tool with the index, then return "Task marked as completed."
+        6. If the user asks to complete or update a task, identify the task number and call the complete_task tool with the index, then return "Task marked as Completed."
         7. Do not give extra information.
         8. Do not explain reasoning.
         9. Do not show which tool you used.
+        10.if user asks showing both task and notes then call get_notes and view_task tool,then return all final task answer. 
+    
         """
 
 agent=create_agent(
@@ -160,7 +167,14 @@ agent=create_agent(
     system_prompt=prompt
 )
 
+
 # call agent
+@traceable(name="call_agent")
 def call_agent(query:str):
-    response=agent.invoke({'messages': [HumanMessage(content=query)]})
-    return response
+    try:
+        response=agent.invoke({'messages': [HumanMessage(content=query)]})
+        return response
+    except Exception as e:
+        logging.error("Sorry, I am facing an issue. Please try again")
+        raise HTTPException(status_code=500,detail=str(e))
+
