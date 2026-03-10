@@ -41,7 +41,7 @@ def get_weathers(query:str):
 
 # Notes tool   
 @tool
-def save_note(query):
+def save_note(query:str):
     """Save the all Notes"""    
     try:
         if os.path.exists(Notes) and os.path.getsize(Notes)>0 :
@@ -49,7 +49,9 @@ def save_note(query):
                 notes=json.load(file)
         else:
             notes=[]
-        notes.append(query)
+        note_list=[t.strip() for t in query.split(",")] 
+        for t in note_list:
+            notes.append(t)
         with open(Notes,'w') as file:
             json.dump(notes,file)
         log.info("Notes add")
@@ -155,7 +157,7 @@ prompt=f"""
         1. if user ask weather details then you are call get_weathers tool and return all current weather data.
         2. if user ask add notes,you are call save_note tool and saved all the data into json file,respond "Note saved".
         3. if you are showing notes then call show_notes and  Return only the all final answer with number format.
-        4. if user add multiple task then add one by one in json,respond "Task added"
+        4. if user add multiple task or note then add one by one in json.
         5. When the user asks to show tasks, call the view_task tool and return the tool output exactly as received with no extra text and format changes.
         6. If the user asks to complete or update a task, identify the index number and call the complete_task tool.
         7. Do not give extra information.
@@ -168,7 +170,6 @@ prompt=f"""
             ii) Notes:
                 - show notes all final answer. 
         12.If the user asks to complete or update a task,convert text number into numeric number.
-
         """
 
 agent=create_agent(
