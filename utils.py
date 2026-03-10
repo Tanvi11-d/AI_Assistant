@@ -23,7 +23,6 @@ logger=logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 log=logging.getLogger(logger)
 
-
 # weather tool
 @tool
 def get_weathers(query:str):
@@ -59,43 +58,44 @@ def save_note(query):
         log.error("Notes not saved!!")
         return "Note Not Saved"
         
-
 @tool
-def get_notes():
+def show_notes():
     """show the Notes"""
     try:
         with open(Notes,'r') as file:
             show_nots=json.load(file)
-            if not show_nots:
-                return "Notes Not Found"
+        if not show_nots:
+            return "Notes not Found"
         log.info("Notes show")
         return "\n".join(show_nots)
     
     except:
         log.error("Notes Not show")
-        raise HTTPException(status_code=500,detail="notes not found")
+        return "Notes not found"
+
 
 # Tasks tool
 @tool
-def add_task(query):
+def add_task(query:str):
     """add all task"""
     try:
         if os.path.exists(task) and os.path.getsize(task)>0:
             with open(task,'r') as file:
                 tasks=json.load(file)
         else:
-            tasks=[]
-        new_task={"task":query,"status":"Pending"}
-        tasks.append(new_task)
+            tasks=[] 
+        task_list=[t.strip() for t in query.split(",")] 
+        for t in task_list:
+            new_task={"task":t,"status":"Pending"}
+            tasks.append(new_task)
+     
         with open(task, 'w') as file:
-          
-            json.dump(tasks,file)
-        log.info("task add")
+                json.dump(tasks,file,indent=4)
+        log.info("Task add")
         return "Task added"
     except:
         log.error("Task Not added!!")
-        raise HTTPException(status_code=500,detail="tasks not added")
-
+        return "tasks not added"
 
 @tool
 def view_task():
@@ -104,33 +104,37 @@ def view_task():
         with open(task,'r') as file:
             get_task=json.load(file)
         if not get_task:
-            return "Tasks Not Found"
+            return "Tasks not Found"
         
         result=" "
         for i,t in enumerate(get_task,start=1):
             result += f"{i}. {t['task']} ({t['status']})\n"
         
-
         log.info("Tasks show")
         return result
     
     except:
         log.error("tasks not show")
-        raise HTTPException(status_code=500,detail="tasks not found")
-
+        return "Tasks not found"
+     
 @tool       
-def complete_task(index: int):
+def complete_task(index:int):
     """update the task complete"""
     try:
         with open(task, "r") as f:
             tasks_update = json.load(f)
-
-        tasks_update[index]["status"] = "Completed"
-      
+        
+        if index<1 or index >len(tasks_update):
+            return "Invalid task index"
+        
+        tasks_update[index-1]["status"] = "Completed"
+        
+        
         with open(task, "w") as f:
             json.dump(tasks_update, f)
         log.info("task updated")
         return "Task marked as completed."
+        
 
     except:
         log.error("task not updated")
@@ -150,20 +154,26 @@ prompt=f"""
         Rules:
         1. if user ask weather details then you are call get_weathers tool and return all current weather data.
         2. if user ask add notes,you are call save_note tool and saved all the data into json file,respond "Note saved".
-        3. if you are showing notes then call get_notes and  Return only the all final answer with number format.
-        4. if you are add task then called add_task tool,respond only "Task added".
+        3. if you are showing notes then call show_notes and  Return only the all final answer with number format.
+        4. if user add multiple task then add one by one in json,respond "Task added"
         5. When the user asks to show tasks, call the view_task tool and return the tool output exactly as received with no extra text and format changes.
-        6. If the user asks to complete or update a task, identify the task number and call the complete_task tool with the index, then return "Task marked as Completed."
+        6. If the user asks to complete or update a task, identify the index number and call the complete_task tool.
         7. Do not give extra information.
         8. Do not explain reasoning.
         9. Do not show which tool you used.
-        10.if user asks showing both task and notes then call get_notes and view_task tool,then return all final task answer. 
-    
+        10.Do not give answer except notes,weather and task.
+        11.if user asks showing both task and notes,then response 
+            i) Tasks:
+                - show task all final answer.
+            ii) Notes:
+                - show notes all final answer. 
+        12.If the user asks to complete or update a task,convert text number into numeric number.
+
         """
 
 agent=create_agent(
     model=model,
-    tools=[get_weathers,save_note,get_notes,add_task,view_task,complete_task],
+    tools=[get_weathers,save_note,show_notes,add_task,view_task,complete_task],
     system_prompt=prompt
 )
 

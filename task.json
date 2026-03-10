@@ -1,1 +1,54 @@
-[{"task": "Buy groceries", "status": "Pending"}, {"task": "Buy pen", "status": "Completed"}]
+[
+    {
+        "task": "buy pen",
+        "status": "Completed"
+    },
+    {
+        "task": "buy laptop",
+        "status": "Completed"
+    },
+    {
+        "task": "Buy groceries",
+        "status": "Completed"
+    },
+    {
+        "task": "agent build",
+        "status": "Pending"
+    },
+    {
+        "task": "create tool",
+        "status": "Pending"
+    },
+    {
+        "task": "learn fastapi",
+        "status": "Pending"
+    },
+    {
+        "task": "api",
+        "status": "Pending"
+    },
+    {
+        "task": "agent",
+        "status": "Pending"
+    },
+    {
+        "task": "learn mcp",
+        "status": "Pending"
+    },
+    {
+        "task": "buy books",
+        "status": "Pending"
+    },
+    {
+        "task": "agent",
+        "status": "Pending"
+    },
+    {
+        "task": "api",
+        "status": "Pending"
+    },
+    {
+        "task": "create aggent",
+        "status": "Pending"
+    }
+]
