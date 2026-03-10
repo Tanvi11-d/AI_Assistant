@@ -164,11 +164,7 @@ prompt=f"""
         8. Do not explain reasoning.
         9. Do not show which tool you used.
         10.Do not give answer except notes,weather and task.
-        11.if user asks showing both task and notes,then response 
-            i) Tasks:
-                - show task all final answer.
-            ii) Notes:
-                - show notes all final answer. 
+        11.if user asks showing both task and notes,then return final answer with tool name.
         12.If the user asks to complete or update a task,convert text number into numeric number.
         """
 

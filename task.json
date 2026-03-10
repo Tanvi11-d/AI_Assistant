@@ -34,21 +34,5 @@
     {
         "task": "learn mcp",
         "status": "Pending"
-    },
-    {
-        "task": "buy books",
-        "status": "Pending"
-    },
-    {
-        "task": "agent",
-        "status": "Pending"
-    },
-    {
-        "task": "api",
-        "status": "Pending"
-    },
-    {
-        "task": "create aggent",
-        "status": "Pending"
     }
 ]
