@@ -92,7 +92,7 @@ def add_task(query:str):
             tasks.append(new_task)
      
         with open(task, 'w') as file:
-                json.dump(tasks,file,indent=4)
+            json.dump(tasks,file,indent=4)
         log.info("Task add")
         return "Task added"
     except:
